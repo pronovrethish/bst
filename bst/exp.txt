@@ -1,0 +1,92 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
+
+// Define a node for the expression tree
+struct Node {
+    char value;
+    struct Node* left;
+    struct Node* right;
+};
+
+// Stack structure for holding nodes during tree construction
+struct Stack {
+    struct Node* data[100];
+    int top;
+};
+
+// Initialize the stack
+void initStack(struct Stack* stack) {
+    stack->top = -1;
+}
+
+// Push a node onto the stack
+void push(struct Stack* stack, struct Node* node) {
+    stack->data[++stack->top] = node;
+}
+
+// Pop a node from the stack
+struct Node* pop(struct Stack* stack) {
+    return stack->data[stack->top--];
+}
+
+// Function to create a new tree node
+struct Node* newNode(char value) {
+    struct Node* node = (struct Node*)malloc(sizeof(struct Node));
+    node->value = value;
+    node->left = NULL;
+    node->right = NULL;
+    return node;
+}
+
+// Function to check if a character is an operator
+int isOperator(char c) {
+    return (c == '+' || c == '-' || c == '*' || c == '/');
+}
+
+// Function to construct expression tree from postfix expression
+struct Node* constructTree(char postfix[]) {
+    struct Stack stack;
+    initStack(&stack);
+    int i;
+
+    for (i = 0; postfix[i] != '\0'; i++) {
+        if (isalnum(postfix[i])) {  // If operand, create node and push to stack
+            push(&stack, newNode(postfix[i]));
+        } else if (isOperator(postfix[i])) {  // If operator, pop two nodes, make them children
+            struct Node* node = newNode(postfix[i]);
+            node->right = pop(&stack);
+            node->left = pop(&stack);
+            push(&stack, node);
+        }
+    }
+
+    // The last element in the stack is the root of the expression tree
+    return pop(&stack);
+}
+
+// Function for in-order traversal with brackets to form infix expression
+void inorderWithBrackets(struct Node* root) {
+    if (root != NULL) {
+        if (isOperator(root->value)) printf("(");
+        
+        inorderWithBrackets(root->left);
+        printf("%c", root->value);
+        inorderWithBrackets(root->right);
+
+        if (isOperator(root->value)) printf(")");
+    }
+}
+
+int main() {
+    char postfix[] = "ab+cde+**";  // Example postfix expression (in place of user input)
+    
+    struct Node* root = constructTree(postfix);
+
+    printf("Infix expression with brackets:\n");
+    inorderWithBrackets(root);
+    printf("\n");
+
+    return 0;
+}
